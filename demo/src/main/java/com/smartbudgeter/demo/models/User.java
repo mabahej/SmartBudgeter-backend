@@ -2,6 +2,8 @@ package com.smartbudgeter.demo.models;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
 @Table(name = "user")
 public class User {
@@ -31,6 +33,11 @@ public class User {
     @Column(name = "family_members")
     private int familyMembers;
 
+     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Reminder> reminders;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Expense> expenses;
     public User() {}
 
     public int getId() {

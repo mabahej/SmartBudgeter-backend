@@ -10,8 +10,8 @@ public class Reminder {
     @Column(name = "reminder_id")
     private int reminderId;
 
-    @Column(name = "user_id")
-    private int userId;
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    private User user;
 
     @Column(name = "title")
     private String title;
@@ -37,15 +37,12 @@ public class Reminder {
     public void setReminderId(int reminderId) {
         this.reminderId = reminderId;
     }
-
-    public int getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
-
     public String getTitle() {
         return title;
     }

@@ -31,7 +31,7 @@ public class DataSeeder implements CommandLineRunner {
         user1.setFamilyMembers(3);
         user1.setGoogleId("google-id-123");
         userRepo.save(user1);*/
-        Expense e1 = new Expense();
+        /*Expense e1 = new Expense();
         e1.setUserId(1);
         e1.setAmount(50.0f);
         e1.setCatId(2);
@@ -48,6 +48,6 @@ public class DataSeeder implements CommandLineRunner {
         e2.setNote("Test expense 2");
         System.out.println("Seeding data...");
         expenseRepo.save(e1);
-        expenseRepo.save(e2);
+        expenseRepo.save(e2);*/
     }
 }
