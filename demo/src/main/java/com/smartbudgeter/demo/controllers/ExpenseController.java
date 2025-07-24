@@ -4,6 +4,8 @@ import com.smartbudgeter.demo.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -37,4 +39,13 @@ public class ExpenseController  {
         }
         return ResponseEntity.notFound().build();
     }
+    @GetMapping("/api/overview/last-month-total")
+    public float getLastMonthTotal(@RequestParam int userId) {
+        LocalDate today = LocalDate.now();
+        LocalDate firstDayOfLastMonth = today.minusMonths(0).withDayOfMonth(1);
+        LocalDate lastDayOfLastMonth = firstDayOfLastMonth.withDayOfMonth(firstDayOfLastMonth.lengthOfMonth());
+
+        return repository.getTotalExpensesForLastMonth(userId, firstDayOfLastMonth, lastDayOfLastMonth);
+    }
+
 }

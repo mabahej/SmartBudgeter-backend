@@ -14,15 +14,18 @@ public class Expense {
     private int expenseId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
     private User user;
 
     @Column(name = "amount")
     private float amount;
 
-    @Column(name = "category")
-    private int catId;
-@Column(name = "date")  
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    
+    @Column(name = "date")  
     private LocalDate date;
 
     @Column(name = "created_at")
@@ -57,14 +60,13 @@ public class Expense {
         this.amount = amount;
     }
 
-    public int getCatId() {
-        return catId;
+    public Category getCategory() {
+        return category;
     }
-
-    public void setCatId(int catId) {
-        this.catId = catId;
+    public void setCategory(Category category) {
+        this.category = category;
     }
-
+    
     public LocalDate getDate() {
         return date;
     }
