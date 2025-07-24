@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
-    Category findByNameAndUser(String name,User user);
+    // You can add custom queries here if needed
 }

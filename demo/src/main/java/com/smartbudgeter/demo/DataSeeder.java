@@ -1,7 +1,6 @@
 package com.smartbudgeter.demo;
 
 import com.smartbudgeter.demo.models.*;
-import com.smartbudgeter.demo.controllers.*;
 import com.smartbudgeter.demo.repositories.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -32,17 +31,15 @@ public class DataSeeder implements CommandLineRunner {
         user1.setFamilyMembers(3);
         user1.setGoogleId("google-id-123");
         userRepo.save(user1);*/
-        UserController userc = new UserController();
-        User user2= new User();
-        //user2=userc.getById(1);
-        Expense e1 = new Expense();
-        e1.setUser(user2);
+        /*Expense e1 = new Expense();
+        e1.setUserId(1);
         e1.setAmount(50.0f);
+        e1.setCatId(2);
         e1.setDate(LocalDate.of(2025, 7, 14));
         e1.setCreatedAt(LocalDateTime.now());
         e1.setNote("Test expense 1");
 
-        /*Expense e2 = new Expense();
+        Expense e2 = new Expense();
         e2.setUserId(2);
         e2.setAmount(20.0f);
         e2.setCatId(1);

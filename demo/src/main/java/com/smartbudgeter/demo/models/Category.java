@@ -18,12 +18,8 @@ public class Category {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-// + getter and setter for 'user'
-
+    @Column(name = "user_id")
+    private int userId;
 
     public Category() {}
 
@@ -45,12 +41,11 @@ public class Category {
     public void setDescription(String description) {
         this.description = description;
     }
-    public User getUser() {
-        return user;
+    public int getUserId() {
+        return userId;
     }
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
-    
     
 }

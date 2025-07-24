@@ -10,8 +10,7 @@ public class Reminder {
     @Column(name = "reminder_id")
     private int reminderId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
     private User user;
 
     @Column(name = "title")
