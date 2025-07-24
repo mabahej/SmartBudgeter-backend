@@ -31,4 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
-**/application.properties
+### my keys ###
+demo/src/main/resources/application.properties
