@@ -15,8 +15,11 @@ public class ChatService {
 
     @Autowired
     private ChatMessageRepository messageRepo;
+    @Autowired
     private UserRepository userRepository;
+    @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
     private ExpenseRepository expenseRepository;
     private static final List<String> categories = List.of(
     "food", "groceries", "coffee", "transport", "rent", "entertainment", "bills", "shopping", "restaurant"
@@ -87,9 +90,9 @@ public class ChatService {
                 return "Sorry, I didn't understand that. Could you rephrase? You can ask me to add expenses, view summaries, or set budgets.";
         }
     }
-    private String handleAddExpense(int id, String message) {
-        // 1. Extract amount, categoryName, date (as before)
-        double amount =extractAmount(message);
+    private String handleAddExpense(int userId, String message) {
+    try {
+        double amount = extractAmount(message);
         String categoryName = extractCategory(message);
         LocalDate date = extractDate(message);
 
@@ -97,33 +100,47 @@ public class ChatService {
             return "Sorry, I couldn't find a valid amount.";
         }
 
-        // 2. Load user entity from userRepository (by username or id)
-        User user = userRepository.findById(id)
-    .orElseThrow(() -> new RuntimeException("User not found with id " + id));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
 
-        if (user == null) {
-            return "User not found.";
-        }
-
-        // 3. Find category entity by name and user, or create if doesn't exist
+        // Find category entity by name and user, or create if doesn't exist
         Category category = categoryRepository.findByNameAndUser(categoryName, user);
         if (category == null) {
             category = new Category();
             category.setName(categoryName);
-            category.setUser(user); // Set the user for the category
-            categoryRepository.save(category);
+            category.setUser(user);
+            category.setDescription("Expense category for " + categoryName);
+            
+            // Save and get the saved entity with ID
+            category = categoryRepository.save(category);
+            System.out.println("Created new category with ID: " + category.getCategoryId()); // Debug
+        } else {
+            System.out.println("Found existing category with ID: " + category.getCategoryId()); // Debug
         }
 
-        // 4. Create and save the expense
+        // Verify category has an ID before creating expense
+        int categoryId = category.getCategoryId();
+        if (categoryId <= 0) {
+            return "Sorry, there was an error creating the category.";
+        }
+
+        // Create and save the expense
         Expense expense = new Expense();
         expense.setAmount((float) amount);
-        expense.setCategory(category);
+        expense.setCategory(category); // This should set the category_id
         expense.setUser(user);
-        expense.setDate(date); // Use provided date or today
+        expense.setDate(date);
+        
+        System.out.println("Creating expense with category ID: " + category.getCategoryId()); // Debug
+        
         expenseRepository.save(expense);
 
         return String.format("Added %.2f TND expense for category '%s' on %s.", amount, categoryName, date);
+    } catch (Exception e) {
+        e.printStackTrace();
+        return "Sorry, there was an error adding your expense. Please try again.";
     }
+}
     
     private double extractAmount(String message) {
         Pattern pattern = Pattern.compile("(\\d+(?:\\.\\d+)?)");

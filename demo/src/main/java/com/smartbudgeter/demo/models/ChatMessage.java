@@ -9,7 +9,7 @@ public class ChatMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     private String sender; // "user" or "bot"
 
@@ -19,6 +19,9 @@ public class ChatMessage {
     private String intent;
 
     private LocalDateTime timestamp;
+    
+    // Add this field to link to the actual user
+    private Integer userId;
 
     public ChatMessage() {
         this.timestamp = LocalDateTime.now();
@@ -30,11 +33,21 @@ public class ChatMessage {
         this.intent = intent;
         this.timestamp = LocalDateTime.now();
     }
+    
+    // Constructor with userId
+    public ChatMessage(String sender, String text, String intent, Integer userId) {
+        this.sender = sender;
+        this.text = text;
+        this.intent = intent;
+        this.userId = userId;
+        this.timestamp = LocalDateTime.now();
+    }
 
-    public Long getId() {
+    // Getters and Setters
+    public int getId() {
         return id;
     }
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
     public String getSender() {
@@ -62,4 +75,11 @@ public class ChatMessage {
         this.timestamp = timestamp;
     }
     
+    // New getter and setter for userId
+    public Integer getUserId() {
+        return userId;
+    }
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
 }

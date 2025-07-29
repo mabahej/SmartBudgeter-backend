@@ -32,12 +32,17 @@ public class User {
 
     @Column(name = "family_members")
     private int familyMembers;
+    @Column(name = "balance")
+    private double balance;
 
      @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Reminder> reminders;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Expense> expenses;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Budget> budgets;
     public User() {}
 
     public int getId() {
@@ -103,8 +108,14 @@ public class User {
     public void setFamilyMembers(int familyMembers) {
         this.familyMembers = familyMembers;
     }
+    public double getBalance() {
+        return balance;
+    }
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
 }
-/*users [icon: users, color: lightblue]{
+/*users {
   id string pk
   email string
   password string

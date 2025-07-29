@@ -49,4 +49,17 @@ public class UserController {
         }
         return ResponseEntity.notFound().build();
     }
+    @GetMapping("/balance/{id}")
+    public ResponseEntity<Double> getBalance(@PathVariable int id) {
+        return repository.findById(id)
+            .map(user -> ResponseEntity.ok(user.getBalance()))
+            .orElse(ResponseEntity.notFound().build());
+}
+    @PutMapping("/balance/{id}")
+    public ResponseEntity<User> updateBalance(@PathVariable int id, @RequestBody double newBalance) {
+        return repository.findById(id).map(user -> {
+            user.setBalance(newBalance);
+            return ResponseEntity.ok(repository.save(user));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

@@ -9,8 +9,9 @@ public class Budget {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "budget_id")
     private int budgetId;
-    @Column(name = "user_id")
-    private int userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user; 
     @Column(name = "amount")
     private float amount;
     @Column(name = "monthly_limit")
@@ -28,12 +29,11 @@ public class Budget {
         this.budgetId = budgetId;
     }
 
-    public int getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public float getAmount() {

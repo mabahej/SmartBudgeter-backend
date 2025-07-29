@@ -13,8 +13,15 @@ public class BudgetController {
       @Autowired
     private BudgetRepository repository;
 
+    @Autowired
+    private UserRepository userRepository;
     @PostMapping
-    public Budget save(@RequestBody Budget budget) {
+    public Budget create(@RequestBody Budget budget) {
+        int userId = budget.getUser().getId();  // get ID from nested object
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        budget.setUser(user);
         return repository.save(budget);
     }
 

@@ -39,13 +39,19 @@ public class ExpenseController  {
         }
         return ResponseEntity.notFound().build();
     }
-    @GetMapping("/api/overview/last-month-total")
-    public float getLastMonthTotal(@RequestParam int userId) {
-        LocalDate today = LocalDate.now();
-        LocalDate firstDayOfLastMonth = today.minusMonths(0).withDayOfMonth(1);
-        LocalDate lastDayOfLastMonth = firstDayOfLastMonth.withDayOfMonth(firstDayOfLastMonth.lengthOfMonth());
+   @GetMapping("/last-month-total/{userId}")
+    public ResponseEntity<Float> getLastMonthTotal(@PathVariable int userId) {
+        try {
+            LocalDate today = LocalDate.now();
+            LocalDate firstDayOfLastMonth = today.minusMonths(0).withDayOfMonth(1); // minusMonths(1) for LAST month
+            LocalDate lastDayOfLastMonth = firstDayOfLastMonth.withDayOfMonth(firstDayOfLastMonth.lengthOfMonth());
 
-        return repository.getTotalExpensesForLastMonth(userId, firstDayOfLastMonth, lastDayOfLastMonth);
+            Float total = repository.getTotalExpensesForLastMonth(userId, firstDayOfLastMonth, lastDayOfLastMonth);
+            System.out.println("Total expenses for last month"+ firstDayOfLastMonth+ " and "+ lastDayOfLastMonth+ ": " + total);
+            return ResponseEntity.ok(total);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
-
 }
