@@ -15,7 +15,7 @@ import java.util.*;
 @Service
 public class NerExtractionService {
 
-    @Value("${huggingface.api.key}")
+   /* @Value("${huggingface.api.key}")
     private String apiKey;
 
     private final String HF_URL = "https://api-inference.huggingface.co/models/Davlan/bert-base-multilingual-cased-ner-hrl";
@@ -86,5 +86,5 @@ public class NerExtractionService {
 
         return result;
     }
-
+*/
 }

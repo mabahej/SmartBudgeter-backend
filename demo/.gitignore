@@ -31,5 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
-### my keys ###
-demo/src/main/resources/application.properties
+# Ignore resources directory
+resources/

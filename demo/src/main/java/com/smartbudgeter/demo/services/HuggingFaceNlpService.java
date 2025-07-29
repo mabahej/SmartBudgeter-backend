@@ -12,7 +12,7 @@ import java.net.http.HttpResponse;
 
 @Service
 public class HuggingFaceNlpService {
-
+/* 
     @Value("${huggingface.api.key}")
     private String apiKey;
 
@@ -66,5 +66,5 @@ public class HuggingFaceNlpService {
         e.printStackTrace();
         return "unknown";
     }
-}
+}*/
 }

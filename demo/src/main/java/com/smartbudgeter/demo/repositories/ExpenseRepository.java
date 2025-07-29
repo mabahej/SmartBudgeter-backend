@@ -1,5 +1,6 @@
 package com.smartbudgeter.demo.repositories;
 
+import com.smartbudgeter.demo.models.Category;
 import com.smartbudgeter.demo.models.Expense;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,5 +16,15 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
 
         @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :start AND :end")
         float getTotalExpensesForLastMonth(@Param("userId") int userId, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+        List<Expense> findByUserOrderByDateDesc(User user);
+
+        List<Expense> findByUserAndDateAfterOrderByDateDesc(User user, LocalDate oneMonthAgo);
+
+        List<Expense> findByUserAndDate(User user, LocalDate date);
+
+        List<Expense> findByUserAndCategoryOrderByDateDesc(User user, Category category);
+
+        List<Expense> findByUserAndCategoryAndDate(User user, Category category, LocalDate date);
 
 }

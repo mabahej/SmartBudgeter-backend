@@ -60,27 +60,31 @@ public class ChatService {
             case "add_expense":
                 handleAddExpense(id, message);
             case "list_expenses":
-               // return handleListExpenses(sender);
+               return handleListExpenses(id);
             case "give_summary":
-               // return handleGiveSummary(sender);
+               return handleGiveSummary(id);
             case "spending_per_period":
-             //   return handleSpendingPerPeriod(sender, message);
+                return handleSpendingPerPeriod(id, message);
             case "add_alert":
-             //   return handleAddAlert(sender, message);
+                return handleAddAlert(id, message);
             case "give_reminder":
-             //   return handleGiveReminder(sender);
+                return handleGiveReminder(id);
             case "review_budget":
-             //   return handleReviewBudget(sender);
+                return handleReviewBudget(id);
             case "add_budget":
-             //   return handleAddBudget(sender, message);
+                return handleAddBudget(id, message);
             case "add_money":
-             //   return handleAddMoney(sender, message);
+                return handleAddMoney(id, message);
             case "filter_expenses":
-             //   return handleFilterExpenses(sender, message);
+                return handleFilterExpenses(id, message);
             case "delete_expense":
-             //   return handleDeleteExpense(sender, message);
+                //return handleDeleteExpense(id, message);
+            case "greeting":
+                return "Hello! I'm your budget assistant. How can I help you today?";
+            case "help":
+                return "I can help you track expenses, view summaries, set budgets, add alerts, and more! Try saying 'Add 20 TND for food' or 'Show me my expenses'.";
             default:
-                return "Sorry, I didn't understand that. Could you rephrase?";
+                return "Sorry, I didn't understand that. Could you rephrase? You can ask me to add expenses, view summaries, or set budgets.";
         }
     }
     private String handleAddExpense(int id, String message) {
@@ -141,17 +145,231 @@ public class ChatService {
 }
 
     private LocalDate extractDate(String message) {
-        String lowerMsg = message.toLowerCase();
-        if (lowerMsg.contains("yesterday")) {
-            return LocalDate.now().minusDays(1);
-        } else if (lowerMsg.contains("today")) {
-            return LocalDate.now();
-        } else {
-            // Could add more parsing, for now default to today
-            return LocalDate.now();
+    String lowerMsg = message.toLowerCase();
+    if (lowerMsg.contains("yesterday")) {
+        return LocalDate.now().minusDays(1);
+    } else if (lowerMsg.contains("today")) {
+        return LocalDate.now();
+    } else {
+        // Try to parse actual dates (DD/MM/YYYY format)
+        Pattern datePattern = Pattern.compile("(\\d{1,2}/\\d{1,2}/\\d{4})");
+        Matcher matcher = datePattern.matcher(message);
+        if (matcher.find()) {
+            try {
+                // Adjust based on your date format
+                String[] parts = matcher.group(1).split("/");
+                return LocalDate.of(Integer.parseInt(parts[2]), Integer.parseInt(parts[1]), Integer.parseInt(parts[0]));
+            } catch (Exception e) {
+                // Fall back to today
+            }
         }
     }
+    return LocalDate.now();
+}
 
+private String handleListExpenses(int userId) {
+    try {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        
+        List<Expense> expenses = expenseRepository.findByUserOrderByDateDesc(user);
+        
+        if (expenses.isEmpty()) {
+            return "You don't have any expenses recorded yet.";
+        }
+        
+        StringBuilder response = new StringBuilder("Here are your recent expenses:\n");
+        double total = 0;
+        
+        for (int i = 0; i < Math.min(5, expenses.size()); i++) {
+            Expense expense = expenses.get(i);
+            response.append(String.format("- %.2f TND for %s on %s\n", 
+                expense.getAmount(), 
+                expense.getCategory().getName(), 
+                expense.getDate()));
+            total += expense.getAmount();
+        }
+        
+        response.append(String.format("\nTotal: %.2f TND (%d expenses)", total, Math.min(5, expenses.size())));
+        return response.toString();
+    } catch (Exception e) {
+        return "Sorry, I couldn't retrieve your expenses. Please try again.";
+    }
+}
+
+private String handleGiveSummary(int userId) {
+    try {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        
+        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
+        List<Expense> recentExpenses = expenseRepository.findByUserAndDateAfterOrderByDateDesc(user, oneMonthAgo);
+        
+        if (recentExpenses.isEmpty()) {
+            return "You haven't recorded any expenses in the last month.";
+        }
+        
+        double total = recentExpenses.stream()
+            .mapToDouble(Expense::getAmount)
+            .sum();
+        
+        return String.format("In the last month, you've spent %.2f TND across %d expenses.", 
+            total, recentExpenses.size());
+    } catch (Exception e) {
+        return "Sorry, I couldn't generate a summary. Please try again.";
+    }
+}
+
+private String handleSpendingPerPeriod(int userId, String message) {
+    try {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        
+        // Check for specific date
+        LocalDate date = extractDate(message);
+        if (!message.toLowerCase().contains("today") && !message.toLowerCase().contains("yesterday")) {
+            // Look for specific date in message
+            List<Expense> expenses = expenseRepository.findByUserAndDate(user, date);
+            if (expenses.isEmpty()) {
+                return String.format("You didn't spend anything on %s.", date);
+            }
+            
+            double total = expenses.stream().mapToDouble(Expense::getAmount).sum();
+            return String.format("On %s, you spent %.2f TND across %d expenses.", 
+                date, total, expenses.size());
+        }
+        
+        // Default to today
+        List<Expense> todayExpenses = expenseRepository.findByUserAndDate(user, LocalDate.now());
+        if (todayExpenses.isEmpty()) {
+            return "You haven't spent anything today.";
+        }
+        
+        double total = todayExpenses.stream().mapToDouble(Expense::getAmount).sum();
+        return String.format("Today, you've spent %.2f TND across %d expenses.", 
+            total, todayExpenses.size());
+    } catch (Exception e) {
+        return "Sorry, I couldn't retrieve spending for that period. Please try again.";
+    }
+}
+
+private String handleAddAlert(int userId, String message) {
+    // This would require an Alert entity and repository
+    return "Alert functionality is being set up. I'll notify you when it's ready!";
+}
+
+private String handleGiveReminder(int userId) {
+    // This would require a Reminder entity and repository
+    return "Reminder functionality is being set up. I'll help you remember important dates soon!";
+}
+
+private String handleReviewBudget(int userId) {
+    try {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        
+        // This would require Budget entity and logic
+        return "Budget review functionality will show you how you're doing against your budget goals!";
+    } catch (Exception e) {
+        return "Sorry, I couldn't review your budget. Please try again.";
+    }
+}
+
+private String handleAddBudget(int userId, String message) {
+    // This would require Budget entity and repository
+    return "Budget setting functionality is being configured. You'll be able to set monthly budgets soon!";
+}
+
+private String handleAddMoney(int userId, String message) {
+    // This would require Balance/Account entity
+    return "Money addition functionality is being set up. You'll be able to track your account balance soon!";
+}
+
+private String handleFilterExpenses(int userId, String message) {
+    try {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        
+        String categoryName = extractCategory(message);
+        if ("miscellaneous".equals(categoryName)) {
+            return "Please specify which category you'd like to filter by (e.g., food, transport, etc.).";
+        }
+        
+        Category category = categoryRepository.findByNameAndUser(categoryName, user);
+        if (category == null) {
+            return String.format("You don't have any expenses in the '%s' category.", categoryName);
+        }
+        
+        List<Expense> expenses = expenseRepository.findByUserAndCategoryOrderByDateDesc(user, category);
+        if (expenses.isEmpty()) {
+            return String.format("You don't have any expenses in the '%s' category.", categoryName);
+        }
+        
+        double total = expenses.stream().mapToDouble(Expense::getAmount).sum();
+        return String.format("In the '%s' category, you've spent %.2f TND across %d expenses.", 
+            categoryName, total, expenses.size());
+    } catch (Exception e) {
+        return "Sorry, I couldn't filter your expenses. Please try again.";
+    }
+}
+private String handleDeleteExpense(int userId, String message) {
+    try {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+
+        // Extract amount, category, and date from the message
+        double amount = extractAmount(message);
+        String categoryName = extractCategory(message);
+        LocalDate date = extractDate(message);
+        
+        if (amount <= 0) {
+            return "Please specify the amount of the expense you want to delete.";
+        }
+        
+        if ("miscellaneous".equals(categoryName)) {
+            return "Please specify the category of the expense you want to delete.";
+        }
+
+        Category category = categoryRepository.findByNameAndUser(categoryName, user);
+        if (category == null) {
+            return String.format("You don't have any expenses in the '%s' category.", categoryName);
+        }
+
+        // Find matching expenses - prioritize by date if specified, otherwise by most recent
+        List<Expense> matchingExpenses;
+        if (message.toLowerCase().contains("today") || message.toLowerCase().contains("yesterday")) {
+            matchingExpenses = expenseRepository.findByUserAndCategoryAndDate(user, category, date);
+        } else {
+            matchingExpenses = expenseRepository.findByUserAndCategoryOrderByDateDesc(user, category);
+        }
+        
+        Expense expenseToDelete = matchingExpenses.stream()
+            .filter(expense -> Math.abs(expense.getAmount() - amount) < 0.01)
+            .findFirst()
+            .orElse(null);
+
+        if (expenseToDelete == null) {
+            return String.format("I couldn't find an expense of %.2f TND in the '%s' category%s.", 
+                amount, categoryName, 
+                message.toLowerCase().contains("today") || message.toLowerCase().contains("yesterday") 
+                    ? " for that date" : "");
+        }
+
+        // Store details before deletion
+        float deletedAmount = expenseToDelete.getAmount();
+        String deletedCategory = expenseToDelete.getCategory().getName();
+        LocalDate deletedDate = expenseToDelete.getDate();
+        
+        expenseRepository.delete(expenseToDelete);
+        
+        return String.format("Deleted expense: %.2f TND for %s on %s.", 
+            deletedAmount, deletedCategory, deletedDate);
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return "Sorry, I couldn't delete the expense. Please try again.";
+    }
+}
 }
 
 

@@ -23,7 +23,7 @@ public class ChatBotService {
     private UserRepository userRepo;
     @Autowired
     private ExpenseRepository expenseRepo;
-    public String extractIntent(String message) {
+    /*public String extractIntent(String message) {
         return nlp.classifyIntent(message);
     }
 
@@ -67,7 +67,7 @@ public class ChatBotService {
             case "get_expenses" -> "Voici la liste de vos dépenses..."; // New case
             default -> "Je n'ai pas bien compris. Pouvez-vous reformuler ?";
         };
-    }
+    }*/
         private float extractAmount(String text) {
             Pattern p = Pattern.compile("(\\d+(\\.\\d{1,2})?)");
             Matcher m = p.matcher(text);
