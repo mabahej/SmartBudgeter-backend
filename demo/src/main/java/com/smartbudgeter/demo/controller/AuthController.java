@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.AuthenticationException;
 import com.smartbudgeter.demo.repository.RefreshTokenRepository;
 import com.smartbudgeter.demo.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
 import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
@@ -101,6 +104,7 @@ public ResponseEntity<?> signin(@RequestBody LoginRequest loginRequest) {
         return ResponseEntity.ok(new AuthResponse(jwt, request.getRefreshToken()));
     }
 @PostMapping("/google-signin")
+@Transactional
 public ResponseEntity<?> googleSignin(@RequestBody GoogleSigninRequest request) {
     try {
         // Log the received ID token from client
@@ -125,9 +129,10 @@ public ResponseEntity<?> googleSignin(@RequestBody GoogleSigninRequest request) 
 
         GoogleIdToken.Payload payload = idToken.getPayload();
         String email = payload.getEmail();
-
+System.out.println("Verified email: " + email);
         User user = userRepository.findByEmailAndIsDeletedFalse(email)
     .orElseGet(() -> {
+        System.out.println("Creating new user for email: " + email);
         User newUser = new User();
         newUser.setUsername(email.split("@")[0]);
         newUser.setEmail(email);
@@ -135,7 +140,7 @@ public ResponseEntity<?> googleSignin(@RequestBody GoogleSigninRequest request) 
         return userRepository.save(newUser);
     });
 
-        String jwt = jwtUtil.generateToken(user.getUsername());
+        String jwt = jwtUtil.generateToken(user.getEmail());
 
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(UUID.randomUUID().toString());
