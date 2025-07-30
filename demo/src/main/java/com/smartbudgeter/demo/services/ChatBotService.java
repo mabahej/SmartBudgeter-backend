@@ -67,7 +67,7 @@ public class ChatBotService {
             case "get_expenses" -> "Voici la liste de vos dépenses..."; // New case
             default -> "Je n'ai pas bien compris. Pouvez-vous reformuler ?";
         };
-    }*/
+    }
         private float extractAmount(String text) {
             Pattern p = Pattern.compile("(\\d+(\\.\\d{1,2})?)");
             Matcher m = p.matcher(text);
@@ -118,6 +118,6 @@ private String extractCategory(String text) {
             .append(" on ").append(e.getDate()).append("\n");
         }
         return sb.toString();
-    }
+    }*/
 
 }

@@ -5,10 +5,11 @@ import com.smartbudgeter.demo.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.regex.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class ChatService {
@@ -61,7 +62,7 @@ public class ChatService {
 
         switch (intent) {
             case "add_expense":
-                handleAddExpense(id, message);
+                return handleAddExpense(id, message);
             case "list_expenses":
                return handleListExpenses(id);
             case "give_summary":
@@ -83,7 +84,13 @@ public class ChatService {
             case "delete_expense":
                 //return handleDeleteExpense(id, message);
             case "greeting":
-                return "Hello! I'm your budget assistant. How can I help you today?";
+                List<Map<String, String>> greetingMessages = new ArrayList<>();
+                greetingMessages.add(Map.of("role", "user", "content", message));
+                return groqClient.getChatbotReply(greetingMessages);
+            case "advice":
+                List<Map<String, String>> advice = new ArrayList<>();
+                advice.add(Map.of("role", "user", "content", message));
+                return groqClient.getChatbotReply(advice);
             case "help":
                 return "I can help you track expenses, view summaries, set budgets, add alerts, and more! Try saying 'Add 20 TND for food' or 'Show me my expenses'.";
             default:
@@ -113,14 +120,14 @@ public class ChatService {
             
             // Save and get the saved entity with ID
             category = categoryRepository.save(category);
-            System.out.println("Created new category with ID: " + category.getCategoryId()); // Debug
+            System.out.println("Created new category with ID: " + category.getId()); // Debug
         } else {
-            System.out.println("Found existing category with ID: " + category.getCategoryId()); // Debug
+            System.out.println("Found existing category with ID: " + category.getId()); // Debug
         }
 
         // Verify category has an ID before creating expense
-        int categoryId = category.getCategoryId();
-        if (categoryId <= 0) {
+        int Id = category.getId();
+        if (Id <= 0) {
             return "Sorry, there was an error creating the category.";
         }
 
@@ -130,8 +137,10 @@ public class ChatService {
         expense.setCategory(category); // This should set the category_id
         expense.setUser(user);
         expense.setDate(date);
+        expense.setCreatedAt(LocalDateTime.now());
+        expense.setNote("Expense for " + categoryName + " on " + date);
         
-        System.out.println("Creating expense with category ID: " + category.getCategoryId()); // Debug
+        System.out.println("Creating expense with category ID: " + category.getId()); // Debug
         
         expenseRepository.save(expense);
 
@@ -152,13 +161,90 @@ public class ChatService {
     }
         
     private String extractCategory(String message) {
-    String lowerMsg = message.toLowerCase();
-    for (String category : categories) {
-        if (lowerMsg.contains(category)) {
+    String lowerMsg = message.toLowerCase().trim();
+    
+    // Try predefined categories first
+    String predefined = findPredefinedCategory(lowerMsg);
+    if (!"miscellaneous".equals(predefined)) {
+        return predefined;
+    }
+    
+    // Extract potential category from context clues
+    String extracted = extractContextCategory(lowerMsg);
+    if (extracted != null && isValidCategory(extracted)) {
+        return extracted;
+    }
+    
+    return "miscellaneous";
+}
+
+private String extractContextCategory(String message) {
+    // Common patterns for expense context
+    String[] patterns = {
+        "\\b(?:bought|paid for|spent on|purchased|got|bought some|paid)\\s+([a-zA-Z]{3,20})\\b",  // bought groceries
+        "\\b([a-zA-Z]{3,20})\\s+(?:expense|cost|purchase|spending)\\b",                           // groceries expense
+        "\\bfor\\s+([a-zA-Z]{3,20})$",                                                             // for groceries
+        "\\b([a-zA-Z]{3,20})\\s+(?:today|yesterday)\\b"                                           // groceries today
+    };
+    
+    for (String patternStr : patterns) {
+        Pattern pattern = Pattern.compile(patternStr, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            String potentialCategory = matcher.group(1);
+            if (isValidCategory(potentialCategory)) {
+                return potentialCategory;
+            }
+        }
+    }
+    
+    return null;
+}
+
+private String findPredefinedCategory(String message) {
+    Map<String, String> categories = Map.of(
+        "food", "food|grocer|meal|lunch|dinner|restaurant|eat|dining|snack|breakfast|coffee",
+        "transport", "transport|bus|taxi|uber|car|fuel|gas|petrol|metro|train|flight|drive",
+        "entertainment", "entertainment|movie|cinema|theater|concert|game|fun|party|netflix|spotify",
+        "utilities", "utility|electricity|water|internet|wifi|phone|mobile|rent|bill|insurance",
+        "shopping", "shop|clothes|shirt|pants|shoes|bag|purchase|buy|mall|amazon"
+    );
+    
+    for (Map.Entry<String, String> entry : categories.entrySet()) {
+        String category = entry.getKey();
+        String keywords = entry.getValue();
+        
+        Pattern pattern = Pattern.compile("\\b(?:" + keywords + ")\\b", Pattern.CASE_INSENSITIVE);
+        if (pattern.matcher(message).find()) {
             return category;
         }
     }
-    return "miscellaneous"; // default category
+    
+    return "miscellaneous";
+}
+
+private boolean isValidCategory(String category) {
+    // Basic validation
+    if (category == null || category.length() < 2 || category.length() > 20) {
+        return false;
+    }
+    
+    // Should contain only letters
+    if (!category.matches("[a-zA-Z]+")) {
+        return false;
+    }
+    
+    // Exclude common non-category words
+    String[] stopWords = {"the", "and", "for", "was", "had", "has", "did", "got", "paid", "spent", 
+                         "bought", "this", "that", "with", "from", "into", "onto", "over", "under"};
+    
+    for (String stopWord : stopWords) {
+        if (category.equalsIgnoreCase(stopWord)) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
     private LocalDate extractDate(String message) {
@@ -194,7 +280,7 @@ private String handleListExpenses(int userId) {
         if (expenses.isEmpty()) {
             return "You don't have any expenses recorded yet.";
         }
-        
+        System.out.println("=======================================================================================");
         StringBuilder response = new StringBuilder("Here are your recent expenses:\n");
         double total = 0;
         
@@ -298,8 +384,35 @@ private String handleAddBudget(int userId, String message) {
 }
 
 private String handleAddMoney(int userId, String message) {
-    // This would require Balance/Account entity
-    return "Money addition functionality is being set up. You'll be able to track your account balance soon!";
+    try {
+        // Extract amount from message
+        Double amount = extractAmount(message);
+        
+        if (amount <= 0) {
+            return "Please specify a valid amount to add. For example: 'Add 1000 to my balance' or 'I got paid 1500 TND'";
+        }
+        
+        // Get current user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Update balance
+        Double currentBalance = user.getBalance();
+        Double newBalance = currentBalance+amount;
+        user.setBalance(newBalance);
+        
+        // Save updated user
+        userRepository.save(user);
+        
+       
+        
+        return String.format("✅ Successfully added %.2f TND to your balance! Your new balance is %.2f TND", 
+                           amount, newBalance);
+                           
+    } catch (Exception e) {
+        e.printStackTrace();
+        return "Sorry, I couldn't process that request. Please try again with a clear amount like 'Add 1000 TND to my balance'";
+    }
 }
 
 private String handleFilterExpenses(int userId, String message) {

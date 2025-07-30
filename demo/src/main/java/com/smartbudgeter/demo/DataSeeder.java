@@ -31,7 +31,7 @@ public class DataSeeder implements CommandLineRunner {
         user1.setFamilyName("Doe");
         user1.setFamilyMembers(3);
         user1.setGoogleId("google-id-123");
-        userRepo.save(user1);*/
+        userRepo.save(user1);
         UserController userc = new UserController();
         User user2= new User();
         //user2=userc.getById(1);
@@ -42,7 +42,7 @@ public class DataSeeder implements CommandLineRunner {
         e1.setCreatedAt(LocalDateTime.now());
         e1.setNote("Test expense 1");
 
-        /*Expense e2 = new Expense();
+        Expense e2 = new Expense();
         e2.setUserId(2);
         e2.setAmount(20.0f);
         e2.setCatId(1);

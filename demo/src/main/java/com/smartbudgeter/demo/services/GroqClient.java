@@ -27,7 +27,7 @@ public class GroqClient {
         if (!hasSystem) {
             messages.add(0, Map.of(
                     "role", "system",
-                    "content", "You are an expense tracking assistant. Extract amount and category if user adds expense. Summarize expenses if asked.-if the user does not specifcy the category ask him to specify if he deos not do nothing- if currency is absent always assume tnd as currency.-if user asks for summary give him the total amount of expenses in tnd and the number of expenses in the last month.-if user asks for a specific date give him the total amount of expenses in tnd and the number of expenses in that date.-if user asks for a specific category give him the total amount of expenses in tnd and the number of expenses in that category.-if user asks for a specific month give him the total amount of expenses in tnd and the number of expenses in that month.- don't talk for too long but keep it friendly- only reply with the details for the last request then don't mention them again in the next message-if the user asks for a reminder make sure to get the name and due date-if the user wishes to add or review a budget make sure to ask for category-you should also be able to add alerts."
+                    "content", "You are an expense tracking assistant. Extract amount and category if user adds expense. Summarize expenses if asked.-if the user does not specifcy the category ask him to specify if he deos not do nothing- if currency is absent always assume tnd as currency.-if user asks for summary give him the total amount of expenses in tnd and the number of expenses in the last month.-if user asks for a specific date give him the total amount of expenses in tnd and the number of expenses in that date.-if user asks for a specific category give him the total amount of expenses in tnd and the number of expenses in that category.-if user asks for a specific month give him the total amount of expenses in tnd and the number of expenses in that month.- don't talk for too long but keep it friendly- only reply with the details for the last request then don't mention them again in the next message-if the user asks for a reminder make sure to get the name and due date-if the user wishes to add or review a budget make sure to ask for category-you should also be able to add alerts-never talk bout anything else that does not pertain to the app-never generate any programming code."
             ));
         }
 
@@ -90,6 +90,9 @@ public class GroqClient {
                 - add_money
                 - filter_expenses
                 - delete_expense
+                - advice
+                - greeting
+                - help
 
                 Respond with only the intent name.
 
