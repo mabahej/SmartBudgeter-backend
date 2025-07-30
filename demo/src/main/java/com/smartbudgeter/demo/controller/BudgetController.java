@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/budgets")
 public class BudgetController {
-    
+    private static final Logger logger = LoggerFactory.getLogger(BudgetController.class);   
     @Autowired
     private BudgetService budgetService;
     
@@ -102,8 +102,54 @@ public ResponseEntity<?> getBudgetsForCurrentUser(@AuthenticationPrincipal Custo
     }
 
 
-
+    @PostMapping("/alert-settings")
+    public ResponseEntity<?> saveAlertSettings(@Valid @RequestBody AlertSettingsRequest request,
+                                              @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                logger.error("Unauthorized access: userDetails is null");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
+            }
+            Long userId = userDetails.getId();
+            budgetService.saveAlertSettings(userId, request.getWarningThreshold());
+            return ResponseEntity.ok().body("Alert settings saved successfully");
+        } catch (Exception e) {
+            logger.error("Error saving alert settings: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body("Error saving alert settings: " + e.getMessage());
+        }
+    }
     
+    // Get alert settings
+    @GetMapping("/alert-settings")
+    public ResponseEntity<?> getAlertSettings(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                logger.error("Unauthorized access: userDetails is null");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
+            }
+            Long userId = userDetails.getId();
+            BigDecimal warningThreshold = budgetService.getAlertSettings(userId);
+            AlertSettingsRequest response = new AlertSettingsRequest();
+            response.setWarningThreshold(warningThreshold);
+            return ResponseEntity.ok(response);
+        } catch (NoSuchElementException e) {
+            logger.warn("Alert settings not found for user ID: {}", userDetails.getId());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Alert settings not found: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error retrieving alert settings: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving alert settings: " + e.getMessage());
+        }
+    }
+
+    // Existing DTO classes (CreateBudgetRequest, UpdateBudgetRequest, AddSpendingRequest) remain unchanged
+
+    // Add AlertSettingsRequest DTO
+    public static class AlertSettingsRequest {
+        private BigDecimal warningThreshold;
+
+        public BigDecimal getWarningThreshold() { return warningThreshold; }
+        public void setWarningThreshold(BigDecimal warningThreshold) { this.warningThreshold = warningThreshold; }
+    }
     // Get budgets by category
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<Budget>> getBudgetsByCategoryId(@PathVariable Long categoryId) {

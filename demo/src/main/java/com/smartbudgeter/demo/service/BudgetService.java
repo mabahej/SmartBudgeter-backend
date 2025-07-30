@@ -1,18 +1,24 @@
 package com.smartbudgeter.demo.service;
 
 import com.smartbudgeter.demo.dto.BudgetResponse;
+import com.smartbudgeter.demo.model.AlertSettings;
 import com.smartbudgeter.demo.model.Budget;
 import com.smartbudgeter.demo.model.User;
 import com.smartbudgeter.demo.model.Category;
+import com.smartbudgeter.demo.model.Notification;
+import com.smartbudgeter.demo.repository.AlertSettingsRepository;
 import com.smartbudgeter.demo.repository.BudgetRepository;
 import com.smartbudgeter.demo.repository.UserRepository;
 import com.smartbudgeter.demo.repository.CategoryRepository;
+import com.smartbudgeter.demo.repository.NotificationRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -24,10 +30,55 @@ public class BudgetService {
     
     @Autowired
     private UserRepository userRepository;
-    
+    @Autowired
+    private AlertSettingsRepository alertSettingsRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
     @Autowired
     private CategoryRepository categoryRepository;
-    
+    @Autowired
+    private EmailService emailService;
+
+    // Existing methods (createBudget, getAllBudgets, etc.) remain unchanged
+
+    public void saveAlertSettings(Long userId, BigDecimal warningThreshold) {
+        AlertSettings alertSettings = alertSettingsRepository.findByUserId(userId)
+            .orElse(new AlertSettings(userId, warningThreshold));
+        alertSettings.setWarningThreshold(warningThreshold);
+        alertSettingsRepository.save(alertSettings);
+
+        // Create in-site notification
+        String message = "Alert settings updated: Warning threshold set to " + warningThreshold + "%";
+        Notification notification = new Notification(userId, message);
+        notificationRepository.save(notification);
+
+        // Send email notification
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isPresent()) {
+                String email = userOptional.get().getEmail();
+                String subject = "SmartBudgeter: Alert Settings Updated";
+                String text = "<h3>Alert Settings Updated</h3><p>Your budget alert warning threshold has been set to " + warningThreshold + "%.</p>";
+                emailService.sendEmail(email, subject, text);
+            }
+        } catch (Exception e) {
+            // Log email sending error but don't fail the operation
+            System.err.println("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    public BigDecimal getAlertSettings(Long userId) {
+        AlertSettings alertSettings = alertSettingsRepository.findByUserId(userId)
+            .orElseThrow(() -> new NoSuchElementException("Alert settings not found for user ID: " + userId));
+        return alertSettings.getWarningThreshold();
+    }
+
+    // New method to get unread notifications
+    public List<Notification> getUnreadNotifications(Long userId) {
+        return notificationRepository.findByUserIdAndIsReadFalse(userId);
+    }
+
+  
     // Create budget
     public Budget createBudget(Long userId, Long categoryId, BigDecimal monthlyLimit) {
         User user = userRepository.findByIdAndIsDeletedFalse(userId)
@@ -127,16 +178,6 @@ public List<Budget> getBudgetsByUserId(Long userId) {
     public List<Budget> getOverBudgetBudgetsByUserId(Long userId) {
         return budgetRepository.findOverBudgetBudgetsByUserId(userId);
     }
-    
-    // Get budget summary for user
-    public BudgetSummary getBudgetSummaryByUserId(Long userId) {
-        BigDecimal totalLimit = budgetRepository.getTotalMonthlyLimitByUserId(userId);
-        BigDecimal totalSpent = budgetRepository.getTotalSpentByUserId(userId);
-        List<Budget> budgets = budgetRepository.findByUserIdAndIsDeletedFalse(userId);
-        
-        return new BudgetSummary(totalLimit, totalSpent, budgets.size());
-    }
-    
     // Inner class for budget summary
     public static class BudgetSummary {
         private BigDecimal totalMonthlyLimit;
@@ -157,4 +198,14 @@ public List<Budget> getBudgetsByUserId(Long userId) {
         public BigDecimal getTotalRemaining() { return totalRemaining; }
         public int getBudgetCount() { return budgetCount; }
     }
+    // Get budget summary for user
+    public BudgetSummary getBudgetSummaryByUserId(Long userId) {
+        BigDecimal totalLimit = budgetRepository.getTotalMonthlyLimitByUserId(userId);
+        BigDecimal totalSpent = budgetRepository.getTotalSpentByUserId(userId);
+        List<Budget> budgets = budgetRepository.findByUserIdAndIsDeletedFalse(userId);
+        
+        return new BudgetSummary(totalLimit, totalSpent, budgets.size());
+    }
+    
+    
 }
