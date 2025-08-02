@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 
 @RestController
-@RequestMapping("/api/register")
+@RequestMapping("/api/user")
 public class UserController {
 
     @Autowired

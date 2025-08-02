@@ -33,8 +33,16 @@ public class User {
     @Column(name = "family_members")
     private int familyMembers;
     @Column(name = "balance")
-    private double balance;
 
+    private double balance;
+    @Column(name = "is_deleted")
+    private boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
      @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Reminder> reminders;
 
@@ -43,6 +51,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Budget> budgets;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<RefreshToken> refreshTokens;
     public User() {}
 
     public int getId() {
@@ -114,6 +125,60 @@ public class User {
     public void setBalance(double balance) {
         this.balance = balance;
     }
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
+    }
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+     @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Soft delete method
+    public void softDelete() {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Restore method (undo soft delete)
+    public void restore() {
+        this.isDeleted = false;
+        this.deletedAt = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+     public void updatePassword(String newPassword) {
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            this.password = newPassword;
+            this.updatedAt = LocalDateTime.now();
+        }
+    }
+
+    // Update Google ID method
+    public void updateGoogleId(String googleId) {
+        this.googleId = googleId;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Check if user is active (not soft deleted)
+    public boolean isActive() {
+        return !this.isDeleted;
+    }
+    public LocalDateTime getdeletedAt() {
+        return deletedAt;
+    }
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+    
 }
 /*users {
   id string pk
