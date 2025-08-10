@@ -36,7 +36,7 @@ public class User {
 
     private double balance;
     @Column(name = "is_deleted")
-    private boolean isDeleted = false;
+    private Boolean isDeleted = false;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -125,10 +125,10 @@ public class User {
     public void setBalance(double balance) {
         this.balance = balance;
     }
-    public boolean isDeleted() {
+    public Boolean isDeleted() {
         return isDeleted;
     }
-    public void setDeleted(boolean deleted) {
+    public void setDeleted(Boolean deleted) {
         isDeleted = deleted;
     }
     public LocalDateTime getUpdatedAt() {
@@ -169,7 +169,7 @@ public class User {
     }
 
     // Check if user is active (not soft deleted)
-    public boolean isActive() {
+    public Boolean isActive() {
         return !this.isDeleted;
     }
     public LocalDateTime getdeletedAt() {

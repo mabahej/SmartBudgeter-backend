@@ -18,6 +18,14 @@ public class Budget {
     private float monthlyLimit;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+    @Column(name = "category_id")
+    private Integer categoryId;
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
+    }
 
     public Budget() {}
 

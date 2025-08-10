@@ -18,7 +18,7 @@ public class Expense {
     private User user;
 
     @Column(name = "amount")
-    private float amount;
+    private Float amount;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -33,7 +33,11 @@ public class Expense {
     @Column(name="note")
     private String note;
 
-    public Expense() {}
+    public Expense() {
+        this.createdAt = LocalDateTime.now();
+        this.date = LocalDate.now();
+        
+    }
 
     // Getters & setters :
 
@@ -52,11 +56,11 @@ public class Expense {
         this.user = user;
     }
 
-    public float getAmount() {
+    public Float getAmount() {
         return amount;
     }
 
-    public void setAmount(float amount) {
+    public void setAmount(Float amount) {
         this.amount = amount;
     }
 

@@ -36,4 +36,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email AND u.id != :userId AND u.isDeleted = false")
     boolean existsByEmailAndIdNot(@Param("email") String email, @Param("userId") Long userId);
+    Optional<User> findByEmail(String email);
 }

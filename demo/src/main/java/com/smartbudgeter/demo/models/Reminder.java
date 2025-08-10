@@ -2,8 +2,12 @@ package com.smartbudgeter.demo.models;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "reminder")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) 
 public class Reminder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -12,6 +16,7 @@ public class Reminder {
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    @JsonIgnore 
     private User user;
 
     @Column(name = "title")
